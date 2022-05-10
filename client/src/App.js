@@ -1,8 +1,20 @@
+import React from 'react';
+import './index.css';
+
+function Navbar() {
+  return (
+    <nav className="navbar">
+      <ul className="navbar-nav"></ul>
+    </nav>
+  );
+}
 
 function App() {
   return (
-    <div className="App"> Hello World </div>
+    <Navbar></Navbar>
     );
 }
+
+
 
 export default App;
