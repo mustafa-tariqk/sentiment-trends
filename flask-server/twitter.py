@@ -5,6 +5,7 @@ import datetime
 import re
 import tweepy
 import nltk
+import urllib.parse
 import numpy as np
 from collections import Counter
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -12,33 +13,53 @@ from nltk.corpus import stopwords
 from string import punctuation
 from secrets import * # Contains the OAuth authentication tokens.
 
-auth = tweepy.OAuth1UserHandler(
-   CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
-)
 
-api = tweepy.API(auth)
+api = tweepy.Client(BEARER_TOKEN,CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
 def collect_data(keyword):
     result = {"time":[], "text":[]}
     date_until = datetime.datetime.now()
-    date_since = date_until - datetime.timedelta(days=5)
+    number_of_tweets = 100
+    # Will query up to 7 days maximum
 
-    for tweet in tweepy.Cursor(api.search, 
-                               q=keyword,
-                               since = date_since, 
-                               until = date_until,
-                               lang="en").items():
-        result["time"].append(tweet.created_at)
-        result["text"].append(tweet.text)
+    keyword = keyword + " lang:en"
+
+    tweets = api.search_recent_tweets(query=keyword,
+                                max_results=number_of_tweets,
+                                end_time=date_until,
+                                tweet_fields=["text","created_at"])
+
+    raw_tweets = []
+    tweet_time = []
+    
+    for twt in tweets.data:
+        raw_tweets.append(twt.text)
+        tweet_time.append(twt.created_at)
+    
+    result = {"time": tweet_time, "text":raw_tweets}
+
     return result
 
 def clean_tweet(tweet):
     """
-    This function processes the tweet into a string array for NLP sentiment analysis.    
+    This function processes the tweet into a string array for NLP sentiment analysis. 
+    Also returns hashtags.   
     """
-    # Removing mentions and special characters with regedit
-    removing_mentions = r'@[A-Za-z0-9_]+'
-    tweet = re.sub(removing_mentions, '', tweet)
+
+    # Removing RT from tweet (can't figure out how to filter out retweets with Twitter APIv2)
+    remove_RT = lambda x: re.compile('RT @').sub('@',x,count=1).strip() 
+    tweet = remove_RT(tweet)
+
+    # Removing mentions with regex
+    tweet = re.sub(r'@[A-Za-z0-9_]+', '', tweet)
+
+    # Removing links
+    tweet = re.sub(r"http\S+", "", tweet)
+    tweet = re.sub(r"www.\S+", "", tweet) 
+
+    # Extracting then removing hashtags
+    hashtags = re.findall(r"#(\w+)", tweet)
+    tweet = re.sub("#[A-Za-z0-9_]+","", tweet)
 
     # Converting uppercase characters
     tweet = tweet.lower()
@@ -57,7 +78,8 @@ def clean_tweet(tweet):
     stop_words = stopwords.words("english")
     new_tweet = [w for w in token if w not in stop_words]
 
-    return ' '.join(new_tweet)
+
+    return ' '.join(new_tweet), hashtags
 
 def analyze_tweets(input_tweets):
     """
@@ -96,14 +118,16 @@ def get_timeseries(keyword):
     {"time":[], "sentiment":[]} where time is an array of datetime objects
     and sentiment is an array of sentiment values.
     """
-    data = collect_data(keyword)
-    input_tweets = []
-    all_text = data["text"]
+    raw_tweet_data = collect_data(keyword)
 
-    for idx in range(len(all_text)):
-        input_tweets.append(clean_tweet(all_text[idx]))
+    processed_tweets = []
+    hashtags = []
+    for idx in range(len(raw_tweet_data["text"])):
+        temptweet, temphash = clean_tweet(str(raw_tweet_data["text"][idx]))
+        processed_tweets.append(temptweet)
+        hashtags.append(temphash)
 
     # Maybe we can also return the frequency data for another visual in the app
-    sentiments, word_labels, word_counts = analyze_tweets(input_tweets)
+    sentiments, word_labels, word_counts = analyze_tweets(processed_tweets)
 
-    return {"time":data["time"], "sentiment":sentiments}
+    return {"time":raw_tweet_data["time"], "sentiment":sentiments}
