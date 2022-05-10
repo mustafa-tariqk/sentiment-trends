@@ -36,15 +36,24 @@ def clean_tweet(tweet):
     """
     This function processes the tweet into a string array for NLP sentiment analysis.    
     """
+    # Removing mentions and special characters with regedit
     removing_mentions = r'@[A-Za-z0-9_]+'
-    tweet = tweet.lower()
-
     tweet = re.sub(removing_mentions, '', tweet)
 
+    # Converting uppercase characters
+    tweet = tweet.lower()
+
+    # Splitting up all words into array of strings
     tokens = tweet.split()
+
+    # Removing punctuation
     table = str.maketrans(" "," ",punctuation)
     tokens = [w.translate(table) for w in tokens]
+
+    # Removing numerical characters
     token = [w for w in tokens if w.isalpha()]
+
+    # Removing stopwords e.g., "a", "the", "for", etc.
     stop_words = stopwords.words("english")
     new_tweet = [w for w in token if w not in stop_words]
 
@@ -56,9 +65,13 @@ def analyze_tweets(input_tweets):
     Returns frequency data as well as sentiment analysis.
     Returns only top 10 word occurrences because there is too much data.
     """
+
+    # Empty list to contain sentiment values
     all_sentiment = []
 
     for idx in range(len(input_tweets)):  
+
+        # nltk sentiment analyzer using polarity scores
         sentiment_analyzer = SentimentIntensityAnalyzer() 
         temp = sentiment_analyzer.polarity_scores(input_tweets[idx])
 
@@ -71,8 +84,8 @@ def analyze_tweets(input_tweets):
     # Acquiring frequency distribution of words
     counts = Counter(str(input_tweets).split())
 
+    # Sorting distribution from highest to lowest frequency
     labels, values = zip(*counts.items())
-
     word_labels = np.array(labels)[np.argsort(values)[::-1]]
     word_counts = np.array(values)[np.argsort(values)[::-1]]
 
@@ -85,7 +98,6 @@ def get_timeseries(keyword):
     """
     data = collect_data(keyword)
     input_tweets = []
-
     all_text = data["text"]
 
     for idx in range(len(all_text)):
