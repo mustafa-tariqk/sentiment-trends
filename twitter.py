@@ -23,7 +23,6 @@ CONSUMER_SECRET = lines[2].rstrip()
 ACCESS_TOKEN = lines[3].rstrip()
 ACCESS_TOKEN_SECRET = lines[4].rstrip()
 
-
 api = tweepy.Client(BEARER_TOKEN,CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
 def collect_data(keyword):
@@ -124,7 +123,8 @@ def analyze_tweets(input_tweets):
         all_sentiment.append(temp["compound"])
 
     # Acquiring frequency distribution of words
-    counts = Counter(str(input_tweets).split())
+    print(input_tweets)
+    counts = Counter(" ".join(input_tweets).split(" "))
 
     # Sorting distribution from highest to lowest frequency
     labels, values = zip(*counts.items())
