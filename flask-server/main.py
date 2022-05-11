@@ -14,3 +14,4 @@ api.add_resource(TwitterSentiment, "/<string:keyword>")
 
 if __name__ == "__main__":
     app.run(debug=True)
+    
