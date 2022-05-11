@@ -1,0 +1,6 @@
+tweepy
+nltk
+numpy
+streamlit
+flask
+flask_restful
