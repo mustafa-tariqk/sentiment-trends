@@ -12,9 +12,9 @@ st.text_input("Enter keyword", key="keyword", value="cibc")
 
 keyword = st.session_state.keyword
 
-tweet_times, sentiments, word_labels, word_counts, hashtags = tpy.get_timeseries(keyword)
+tweet_time_df, word_labels, word_counts, hashtags = tpy.get_timeseries(keyword)
 
-st.line_chart(sentiments)
+st.line_chart(tweet_time_df)
 
 
 

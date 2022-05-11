@@ -7,6 +7,7 @@ import tweepy
 import nltk
 import urllib.parse
 import numpy as np
+import pandas as pd
 from collections import Counter
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.corpus import stopwords
@@ -28,6 +29,7 @@ api = tweepy.Client(BEARER_TOKEN,CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, AC
 def collect_data(keyword):
     result = {"time":[], "text":[]}
     date_until = datetime.datetime.now()
+    date_start = date_until - datetime.timedelta(days = 5)
     number_of_tweets = 100
     # Will query up to 7 days maximum
 
@@ -36,6 +38,7 @@ def collect_data(keyword):
     tweets = api.search_recent_tweets(query=keyword,
                                 max_results=number_of_tweets,
                                 end_time=date_until,
+                                start_time=date_start,
                                 tweet_fields=["text","created_at"])
 
     raw_tweets = []
@@ -96,7 +99,7 @@ def analyze_tweets(input_tweets):
     Returns frequency data as well as sentiment analysis.
     Returns only top 10 word occurrences because there is too much data.
     """
-    def moving_average(a, n=3):
+    def moving_average(a, n=1):
     
         # Cumulative sum
         ret = np.cumsum(a, dtype=float)
@@ -130,7 +133,7 @@ def analyze_tweets(input_tweets):
 
     rolling_sentiment = moving_average(all_sentiment)
 
-    return rolling_sentiment, word_labels[0:10], word_counts[0:10]
+    return rolling_sentiment, word_labels, word_counts
 
 def get_timeseries(keyword):
 
@@ -138,12 +141,14 @@ def get_timeseries(keyword):
 
     processed_tweets = []
     hashtags = []
+    
     for idx in range(len(raw_tweet_data["text"])):
         temptweet, temphash = clean_tweet(str(raw_tweet_data["text"][idx]))
         processed_tweets.append(temptweet)
         hashtags.append(temphash)
 
-    # Maybe we can also return the frequency data for another visual in the app
     sentiments, word_labels, word_counts = analyze_tweets(processed_tweets)
 
-    return raw_tweet_data["time"], sentiments, word_labels, word_counts, hashtags
+    time_tweets_df = pd.DataFrame({"Sentiment":sentiments}, index = raw_tweet_data["time"])
+
+    return time_tweets_df, word_labels, word_counts, hashtags
