@@ -16,7 +16,7 @@ tweet_time_df, word_labels, word_counts, hashtags = tpy.get_timeseries(keyword)
 
 st.line_chart(tweet_time_df)
 
+freq_df = pd.DataFrame({"Count":word_counts}, index = word_labels)
 
-
-
+st.bar_chart(freq_df.head())
 
