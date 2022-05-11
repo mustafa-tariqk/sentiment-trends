@@ -12,18 +12,9 @@ from collections import Counter
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.corpus import stopwords
 from string import punctuation
-from secrets import * # Contains the OAuth authentication tokens.
+from secret import * # Contains the OAuth authentication tokens.
 
-keys_file = open("secrets.txt")
-lines = keys_file.readlines()
-
-BEARER_TOKEN = lines[0].rstrip()
-CONSUMER_KEY = lines[1].rstrip()
-CONSUMER_SECRET = lines[2].rstrip()
-ACCESS_TOKEN = lines[3].rstrip()
-ACCESS_TOKEN_SECRET = lines[4].rstrip()
-
-api = tweepy.Client(BEARER_TOKEN,CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+api = tweepy.Client(BEARER_TOKEN, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
 def collect_data(keyword):
     result = {"time":[], "text":[]}
