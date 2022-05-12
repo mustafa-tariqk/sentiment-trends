@@ -39,7 +39,7 @@ def moving_average(x, w=3):
     """
     return np.convolve(x, np.ones(w), 'same') / w
 
-def collect_data(keyword, hours_num):
+def collect_data(keyword, hours_num, hour_interval=2):
     """
     collect_data uses the Twitter API via tweepy module to collect tweets based
     on a search query. WIth current Essential Access, only Twitter API v2 can
@@ -55,8 +55,6 @@ def collect_data(keyword, hours_num):
     
     # Query
     keyword = keyword + " lang:en"
-
-    hour_interval = 5
 
     for date_idx in range(1,hours_num):
 
@@ -89,7 +87,9 @@ def clean_tweet(tweet):
 
     # Removing RT from tweet (can't figure out how to filter out retweets with Twitter APIv2)
     remove_RT = lambda x: re.compile('rt @').sub('@',x,count=1).strip() 
+    remove_amp = lambda x: re.compile('amp @').sub('@',x,count=1).strip() 
     tweet = remove_RT(tweet)
+    tweet = remove_amp(tweet)
 
     # Removing mentions with regex
     tweet = re.sub(r'@[A-Za-z0-9_]+', '', tweet)
@@ -153,8 +153,8 @@ def get_timeseries(keyword):
     """
     processed_tweets = []
     hashtags = []
-    
-    raw_tweet_data = collect_data(keyword, 10)
+    num_hours = 5
+    raw_tweet_data = collect_data(keyword, num_hours, hour_interval=2)
     
     for idx in range(len(raw_tweet_data["text"])):
         temptweet, temphash = clean_tweet(str(raw_tweet_data["text"][idx]))
