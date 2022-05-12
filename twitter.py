@@ -1,5 +1,5 @@
 """ This file will collect twitter data based on a keyword and perform
-sentiment analysis on the data for the past 5 days.
+sentiment analysis on the data for the past 5 days. 
 """
 import datetime
 import re
@@ -48,7 +48,6 @@ def collect_data(keyword, hours_num):
     per hour and returns a dictionary with the raw text and timestamp.
     """
 
-    date_start = []
     raw_tweets = []
     tweet_time = []
     
@@ -57,10 +56,12 @@ def collect_data(keyword, hours_num):
     # Query
     keyword = keyword + " lang:en"
 
+    hour_interval = 5
+
     for date_idx in range(1,hours_num):
 
-        date_start = datetime.datetime.now() - datetime.timedelta(hours = date_idx)
-        date_until = date_start + datetime.timedelta(hours=1)
+        date_start = datetime.datetime.now() - datetime.timedelta(hours = date_idx*hour_interval)
+        date_until = date_start + datetime.timedelta(hours=hour_interval)
 
         tweets = api.search_recent_tweets(query=keyword,
                                     max_results=number_of_tweets,
@@ -68,17 +69,16 @@ def collect_data(keyword, hours_num):
                                     start_time=date_start,
                                     tweet_fields=["text","created_at"])
 
-        
-        for twt in tweets.data:
-            raw_tweets.append(twt.text)
-            tweet_time.append(twt.created_at)
+   # if not tweets.data:
+    #    return {"time": date_start, "text": [""]}
+    #else:
+    for twt in tweets.data:
+        raw_tweets.append(twt.text)
+        tweet_time.append(twt.created_at)
     
     result = {"time": tweet_time, "text": raw_tweets}
 
-    if result == {}:
-        return {"time": [" "], "text": [" "]}
-    else:
-        return result
+    return result
 
 def clean_tweet(tweet):
     """
@@ -86,9 +86,9 @@ def clean_tweet(tweet):
     Also returns hashtags as list of words.   
     """
     tweet = tweet.lower()
-    
+
     # Removing RT from tweet (can't figure out how to filter out retweets with Twitter APIv2)
-    remove_RT = lambda x: re.compile('RT @').sub('@',x,count=1).strip() 
+    remove_RT = lambda x: re.compile('rt @').sub('@',x,count=1).strip() 
     tweet = remove_RT(tweet)
 
     # Removing mentions with regex
