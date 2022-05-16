@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import twitter as tpy
+import matplotlib.pyplot as plt
+# plt.style.use('grayscale')
 
 st.title("Twitter Sentiment Trend Analysis")
 
@@ -13,7 +15,11 @@ keyword = st.session_state.keyword
 
 tweet_time_df, word_labels, word_counts, hashtag_labels, hashtag_counts = tpy.get_timeseries(keyword)
 
-st.line_chart(tweet_time_df)
+fig, ax = plt.subplots()
+ax.plot(tweet_time_df)
+st.pyplot(fig)
+
+# st.line_chart(tweet_time_df)
 
 freq_df = pd.DataFrame({"Count":word_counts}, index = word_labels)
 hash_df = pd.DataFrame({"Count":hashtag_counts}, index = hashtag_labels)
