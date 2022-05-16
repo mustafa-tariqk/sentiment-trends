@@ -56,7 +56,7 @@ def collect_data(keyword, hours_num, hour_interval=2):
     # Query
     keyword = keyword + " lang:en"
 
-    for date_idx in range(1,hours_num):
+    for date_idx in range(hours_num,1,-1):
 
         date_start = datetime.datetime.now() - datetime.timedelta(hours = date_idx*hour_interval)
         date_until = date_start + datetime.timedelta(hours=hour_interval)
