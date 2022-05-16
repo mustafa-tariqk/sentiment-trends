@@ -12,6 +12,8 @@ from nltk.corpus import stopwords
 from string import punctuation
 from secret import * # Contains the OAuth authentication tokens.
 
+ROLLING = 100
+
 api = tweepy.Client(BEARER_TOKEN, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
 def sort_freq(input_text_list):
@@ -30,14 +32,14 @@ def sort_freq(input_text_list):
 
     return word_labels, word_counts
 
-def moving_average(x, w=100):
+def moving_average(x):
     """
     moving_average calculates the moving average of an array of numbers using
     convolution. The input array is convolved with a smaller array of ones,
     equivalent to a cumulative sum, then divided by the length of the array of
     ones. 
     """
-    return np.convolve(x, np.ones(w), 'same') / w
+    return np.convolve(x, np.ones(ROLLING), 'same') / ROLLING
 
 def collect_data(keyword, hours_num, hour_interval=2):
     """
@@ -51,8 +53,6 @@ def collect_data(keyword, hours_num, hour_interval=2):
     raw_tweets = []
     tweet_time = []
     
-    number_of_tweets = 100
-    
     # Query
     keyword = keyword + " lang:en"
 
@@ -62,7 +62,7 @@ def collect_data(keyword, hours_num, hour_interval=2):
         date_until = date_start + datetime.timedelta(hours=hour_interval)
 
         tweets = api.search_recent_tweets(query=keyword,
-                                    max_results=number_of_tweets,
+                                    max_results=ROLLING,
                                     end_time=date_until,
                                     start_time=date_start,
                                     tweet_fields=["text","created_at"])
