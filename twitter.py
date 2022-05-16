@@ -51,7 +51,7 @@ def collect_data(keyword, hours_num, hour_interval=2):
     raw_tweets = []
     tweet_time = []
     
-    number_of_tweets = 100
+    number_of_tweets = 10
     
     # Query
     keyword = keyword + " lang:en"
@@ -70,13 +70,14 @@ def collect_data(keyword, hours_num, hour_interval=2):
    # if not tweets.data:
     #    return {"time": date_start, "text": [""]}
     #else:
-    for twt in tweets.data:
-        raw_tweets.append(twt.text)
-        tweet_time.append(twt.created_at)
+        if tweets.data:
+            for twt in tweets.data:
+                raw_tweets.append(twt.text)
+                tweet_time.append(twt.created_at)
     
-    result = {"time": tweet_time, "text": raw_tweets}
-
-    return result
+    if not raw_tweets:
+        return {"time": [date_start], "text": [""]} 
+    return {"time": tweet_time, "text": raw_tweets}
 
 def clean_tweet(tweet):
     """
@@ -153,8 +154,8 @@ def get_timeseries(keyword):
     """
     processed_tweets = []
     hashtags = []
-    num_hours = 5
-    raw_tweet_data = collect_data(keyword, num_hours, hour_interval=2)
+    num_hours = 24
+    raw_tweet_data = collect_data(keyword, num_hours, hour_interval=1)
     
     for idx in range(len(raw_tweet_data["text"])):
         temptweet, temphash = clean_tweet(str(raw_tweet_data["text"][idx]))
@@ -168,6 +169,6 @@ def get_timeseries(keyword):
 
     hashtag_labels, hashtag_counts = sort_freq(hashtags)
 
-    time_tweets_df = pd.DataFrame({"Sentiment":sentiments}, index = raw_tweet_data["time"])
+    time_tweets_df = pd.DataFrame({"Sentiment":sentiments})#, index = raw_tweet_data["time"])
 
     return time_tweets_df, word_labels, word_counts, hashtag_labels, hashtag_counts
