@@ -30,7 +30,7 @@ def sort_freq(input_text_list):
 
     return word_labels, word_counts
 
-def moving_average(x, w=3):
+def moving_average(x, w=100):
     """
     moving_average calculates the moving average of an array of numbers using
     convolution. The input array is convolved with a smaller array of ones,
@@ -51,7 +51,7 @@ def collect_data(keyword, hours_num, hour_interval=2):
     raw_tweets = []
     tweet_time = []
     
-    number_of_tweets = 10
+    number_of_tweets = 100
     
     # Query
     keyword = keyword + " lang:en"
@@ -77,6 +77,7 @@ def collect_data(keyword, hours_num, hour_interval=2):
     
     if not raw_tweets:
         return {"time": [date_start], "text": [""]} 
+
     return {"time": tweet_time, "text": raw_tweets}
 
 def clean_tweet(tweet):
