@@ -4,3 +4,4 @@ numpy
 streamlit
 flask
 flask_restful
+matplotlib
