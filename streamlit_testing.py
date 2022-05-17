@@ -3,12 +3,13 @@ import pandas as pd
 import twitter as tpy
 import numpy as np
 import matplotlib.pyplot as plt
-# plt.style.use('grayscale')
+plt.style.use('dark_background')
 
 st.title("Twitter Sentiment Trend Analysis")
 
 st.text("This app takes a keyword as input and returns the sentiment of related tweets over time.")
-st.text("A histogram of most commonly used words and hashtags is also provided.")
+st.text("The line chart is coded as blue being more positive and red being more negative.")
+st.text("Histograms of associated words and hashtags are also provided.")
 
 st.text_input("Enter keyword", key="keyword", value="cibc")
 
@@ -16,30 +17,21 @@ keyword = st.session_state.keyword
 
 tweet_time_df, word_labels, word_counts, hashtag_labels, hashtag_counts = tpy.get_timeseries(keyword)
 
-fig, ax = plt.subplots()
-# Needs some work to fill in gaps
-# pos_signal = tweet_time_df["Sentiment"].copy()
-# neg_signal = tweet_time_df["Sentiment"].copy()
-# pos_signal[pos_signal <= 0] = np.nan
-# neg_signal[neg_signal > 0] = np.nan
-# ax.plot(pos_signal, color='b')
-# ax.plot(neg_signal, color='r')
-ax.plot(tweet_time_df, color='red')
+# Getting figure object handle (copy and to_numpy are used to get correct array dimensions)
+fig = tpy.multi_color_plot(tweet_time_df["Sentiment"].copy().to_numpy())
 st.pyplot(fig)
 
-# st.line_chart(tweet_time_df)
-
-freq_df = pd.DataFrame({"Count":word_counts}, index = word_labels)
-hash_df = pd.DataFrame({"Count":hashtag_counts}, index = hashtag_labels)
+freq_df = pd.DataFrame({"":word_counts}, index = word_labels)
+hash_df = pd.DataFrame({"":hashtag_counts}, index = hashtag_labels)
 
 col1, col2 = st.columns(2)
 with col1:
-    st.header("Common words associated with keyword")
+    st.header("Associated Keywords")
     # st.bar_chart(freq_df.head())
-    st.bar_chart(freq_df.iloc[1:6])
+    st.bar_chart(freq_df.iloc[1:6], width=300, height=500)
 
 with col2:
-    st.header("Hashtags associated with keyword")
+    st.header("Associated Hashtags")
     # st.bar_chart(hash_df.head())
-    st.bar_chart(hash_df.iloc[1:6])
+    st.bar_chart(hash_df.iloc[1:6], width=300, height=500)
 

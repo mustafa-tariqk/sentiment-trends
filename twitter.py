@@ -10,11 +10,49 @@ from collections import Counter
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.corpus import stopwords
 from string import punctuation
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+from matplotlib.collections import LineCollection
 from secret import * # Contains the OAuth authentication tokens.
 
 ROLLING = 100
 
 api = tweepy.Client(BEARER_TOKEN, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+
+
+def multi_color_plot(y):
+    """
+    multi_color_plot takes as input sentiment data and returns a fig object
+    which is a line plot color-coded to the polarity of the data.
+    
+    """
+    fig, ax = plt.subplots()
+
+    # Creating line segments to be color coded
+    x_val = np.linspace(0, len(y), len(y))
+    points = np.array([x_val, y]).T.reshape(-1, 1, 2)
+    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+
+    # Setting up bounds for color coding and choosing color theme
+    norm = plt.Normalize(y.min(), y.max())
+    lc = LineCollection(segments, cmap='seismic_r', norm=norm)
+    # Using input array as color reference
+    lc.set_array(y)
+    lc.set_linewidth(2)
+    line = ax.add_collection(lc)
+
+    # This is done to avoid annoying scaling errors
+    ax.plot(y*np.nan)
+
+    tick_spacing = round(max(x_val)/5)
+
+    ax.set_yticks([])
+    # ax.set_xticks(x_val[0:-1:tick_spacing],labels=['24','18', '12', '6', 'Now'])
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
+    ax.set_ylabel("Tweet Sentiment")
+    ax.set_xlabel("Time")
+
+    return fig
 
 def sort_freq(input_text_list):
     """
