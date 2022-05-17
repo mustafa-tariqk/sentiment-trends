@@ -2,6 +2,7 @@
 sentiment analysis on the data for the past 5 days. 
 """
 import datetime
+import altair as alt
 import re
 import tweepy
 import numpy as np
@@ -20,39 +21,88 @@ ROLLING = 100
 api = tweepy.Client(BEARER_TOKEN, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
 
-def multi_color_plot(y):
-    """
-    multi_color_plot takes as input sentiment data and returns a fig object
-    which is a line plot color-coded to the polarity of the data.
-    
-    """
-    fig, ax = plt.subplots()
+# Line chart 
+def get_line_chart(data):
+    hover = alt.selection_single(
+        fields=["Time"],
+        nearest=True,
+        on="mouseover",
+        empty="none",
+    )
 
-    # Creating line segments to be color coded
-    x_val = np.linspace(0, len(y), len(y))
-    points = np.array([x_val, y]).T.reshape(-1, 1, 2)
-    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+    lines = (
+        alt.Chart(data, title="Twitter Tweet Sentiment in 24 Hours")
+        .mark_line(color='red')
+        .encode(
+            x="Time",
+            y="Sentiment:Q",
+            # detail='Sentiment:Q'
+            # color='alt.Color('Sentiment:Q',
+            #        scale=alt.Scale(scheme='redblue', type='linear')))'
+        )
+    )
 
-    # Setting up bounds for color coding and choosing color theme
-    norm = plt.Normalize(y.min(), y.max())
-    lc = LineCollection(segments, cmap='seismic_r', norm=norm)
-    # Using input array as color reference
-    lc.set_array(y)
-    lc.set_linewidth(2)
-    line = ax.add_collection(lc)
 
-    # This is done to avoid annoying scaling errors
-    ax.plot(y*np.nan)
+    # lines = lines.encode(color=alt.Color('Sentiment:Q',
+                #    scale=alt.Scale(scheme='redblue')))
 
-    tick_spacing = round(max(x_val)/5)
+    # Draw points on the line, and highlight based on selection
+    points = lines.transform_filter(hover).mark_circle(size=65)
 
-    ax.set_yticks([])
-    # ax.set_xticks(x_val[0:-1:tick_spacing],labels=['24','18', '12', '6', 'Now'])
-    ax.xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
-    ax.set_ylabel("Tweet Sentiment")
-    ax.set_xlabel("Time")
+    # Draw a rule at the location of the selection
+    tooltips = (
+        alt.Chart(data)
+        .mark_rule()
+        .encode(
+            # x="yearmonthdate(time)",
+            y="Sentiment",
+            opacity=alt.condition(hover, alt.value(0.3), alt.value(0)),
+            tooltip=[
+                # alt.Tooltip("time", title="Time"),
+                alt.Tooltip("Sentiment", title="Sentiment"),
+                alt.Tooltip("Tweets", title="Tweet"),
+            ],
+        )
+        .add_selection(hover)
+    )
+    return (lines + points + tooltips).interactive()
 
-    return fig
+    # Line chart 
+def get_bar_chart(data):
+    hover = alt.selection_single(
+        fields=["Word"],
+        nearest=True,
+        on="mouseover",
+        empty="none",
+    )
+
+    bars = (
+        alt.Chart(data).mark_bar(color='red').encode(
+        x='Word',
+        y='Count'
+        )  
+    )
+
+    # Draw points on the line, and highlight based on selection
+    points = bars.transform_filter(hover).mark_circle(size=65)
+
+    # Draw a rule at the location of the selection
+    tooltips = (
+        alt.Chart(data)
+        .mark_rule()
+        .encode(
+            # x="yearmonthdate(time)",
+            y="Count",
+            opacity=alt.condition(hover, alt.value(0.3), alt.value(0)),
+            tooltip=[
+                # alt.Tooltip("time", title="Time"),
+                alt.Tooltip("Count", title="Count"),
+                alt.Tooltip("Word"),
+            ],
+        )
+        .add_selection(hover)
+    )
+    return (bars + points + tooltips).interactive()
 
 def sort_freq(input_text_list):
     """
@@ -94,7 +144,7 @@ def collect_data(keyword, hours_num, hour_interval=2):
     # Query
     keyword = keyword + " lang:en"
 
-    for date_idx in range(hours_num,1,-1):
+    for date_idx in range(hours_num,0,-1):
 
         date_start = datetime.datetime.now() - datetime.timedelta(hours = date_idx*hour_interval)
         date_until = date_start + datetime.timedelta(hours=hour_interval)
@@ -208,6 +258,7 @@ def get_timeseries(keyword):
 
     hashtag_labels, hashtag_counts = sort_freq(hashtags)
 
-    time_tweets_df = pd.DataFrame({"Sentiment":sentiments})#, index = raw_tweet_data["time"])
+    # time_tweets_df = pd.DataFrame({"Sentiment":sentiments, "Tweets":raw_tweet_data["text"]})#, index = raw_tweet_data["time"])
+    time_tweets_df = pd.DataFrame({"Sentiment":sentiments, "Tweets":raw_tweet_data["text"], "Time":raw_tweet_data["time"]})
 
     return time_tweets_df, word_labels, word_counts, hashtag_labels, hashtag_counts
