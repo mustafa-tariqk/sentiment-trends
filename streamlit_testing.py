@@ -32,11 +32,14 @@ st.pyplot(fig)
 freq_df = pd.DataFrame({"Count":word_counts}, index = word_labels)
 hash_df = pd.DataFrame({"Count":hashtag_counts}, index = hashtag_labels)
 
-st.header("Common words associated with keyword")
-# st.bar_chart(freq_df.head())
-st.bar_chart(freq_df.iloc[1:6])
+col1, col2 = st.columns(2)
+with col1:
+    st.header("Common words associated with keyword")
+    # st.bar_chart(freq_df.head())
+    st.bar_chart(freq_df.iloc[1:6])
 
-st.header("Hashtags associated with keyword")
-# st.bar_chart(hash_df.head())
-st.bar_chart(hash_df.iloc[1:6])
+with col2:
+    st.header("Hashtags associated with keyword")
+    # st.bar_chart(hash_df.head())
+    st.bar_chart(hash_df.iloc[1:6])
 
