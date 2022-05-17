@@ -5,6 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 # plt.style.use('dark_background')
 
+st.set_page_config(page_title="Twitter Sentiment Trend Analysis", page_icon="🐦", layout="centered")
+
+st.image("CIBC x Innovation Logo - Simplified Grey.png")
 st.title("Twitter Sentiment Trend Analysis")
 
 st.text("This app takes a keyword as input and returns the sentiment of related tweets over time.")
