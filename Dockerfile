@@ -9,4 +9,4 @@ RUN python -m nltk.downloader all
 COPY . . 
 
 ENTRYPOINT ["streamlit", "run"]
-CMD [ "streamlit_test.py" ]
+CMD [ "streamlit_testing.py" ]
