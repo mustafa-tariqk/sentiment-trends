@@ -10,9 +10,10 @@ st.set_page_config(page_title="Twitter Sentiment Trend Analysis", page_icon="üê
 st.image("CIBC x Innovation Logo - Simplified Grey.png")
 st.title("Twitter Sentiment Trend Analysis")
 
-st.text("This app takes a keyword as input and returns the sentiment of related tweets over time.")
-st.text("The line chart is coded as blue being more positive and red being more negative.")
-st.text("Histograms of associated words and hashtags are also provided.")
+st.markdown("Type in a keyword and see how people on twitter have felt about it!  \n\
+            The higher the point on the graph, the better people feel about the keyword.  \n\
+            We also share the most associated words and hashtags below the graph.")
+
 
 st.text_input("Enter keyword", key="keyword", value="cibc")
 
