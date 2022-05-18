@@ -16,7 +16,7 @@ import matplotlib.ticker as ticker
 from matplotlib.collections import LineCollection
 from secret import * # Contains the OAuth authentication tokens.
 
-ROLLING = 100
+ROLLING = 10
 
 api = tweepy.Client(BEARER_TOKEN, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
@@ -36,15 +36,8 @@ def get_line_chart(data):
         .encode(
             x="Time",
             y="Sentiment:Q",
-            # detail='Sentiment:Q'
-            # color='alt.Color('Sentiment:Q',
-            #        scale=alt.Scale(scheme='redblue', type='linear')))'
         )
     )
-
-
-    # lines = lines.encode(color=alt.Color('Sentiment:Q',
-                #    scale=alt.Scale(scheme='redblue')))
 
     # Draw points on the line, and highlight based on selection
     points = lines.transform_filter(hover).mark_circle(size=65)
@@ -58,7 +51,6 @@ def get_line_chart(data):
             y="Sentiment",
             opacity=alt.condition(hover, alt.value(0.3), alt.value(0)),
             tooltip=[
-                # alt.Tooltip("time", title="Time"),
                 alt.Tooltip("Sentiment", title="Sentiment"),
                 alt.Tooltip("Tweets", title="Tweet"),
             ],
@@ -67,42 +59,17 @@ def get_line_chart(data):
     )
     return (lines + points + tooltips).interactive()
 
-    # Line chart 
+# Bar chart using pyploy
 def get_bar_chart(data):
-    hover = alt.selection_single(
-        fields=["Word"],
-        nearest=True,
-        on="mouseover",
-        empty="none",
-    )
 
-    bars = (
-        alt.Chart(data).mark_bar(color='red').encode(
-        x='Word',
-        y='Count'
-        )  
-    )
+    fig, axe = plt.subplots()
+    data.plot.bar(color='red', rot=45, ax=axe, legend=False)
+    
+    # Make background transparent
+    fig.patch.set_alpha(0)
+    axe.patch.set_alpha(0)
 
-    # Draw points on the line, and highlight based on selection
-    points = bars.transform_filter(hover).mark_circle(size=65)
-
-    # Draw a rule at the location of the selection
-    tooltips = (
-        alt.Chart(data)
-        .mark_rule()
-        .encode(
-            # x="yearmonthdate(time)",
-            y="Count",
-            opacity=alt.condition(hover, alt.value(0.3), alt.value(0)),
-            tooltip=[
-                # alt.Tooltip("time", title="Time"),
-                alt.Tooltip("Count", title="Count"),
-                alt.Tooltip("Word"),
-            ],
-        )
-        .add_selection(hover)
-    )
-    return (bars + points + tooltips).interactive()
+    return fig
 
 def sort_freq(input_text_list):
     """
