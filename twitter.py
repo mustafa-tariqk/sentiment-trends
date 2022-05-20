@@ -135,6 +135,45 @@ def collect_data(keyword, hours_num, hour_interval=2):
 
     return {"time": tweet_time, "text": raw_tweets}
 
+def collect_data_by_minutes(keyword, mins_num, min_interval=1):
+    """
+    collect_data_by_minutes uses the Twitter API via tweepy module to collect tweets based
+    on a search query. WIth current Essential Access, only Twitter API v2 can
+    be used. Searches are limited to a maximum of 7 days before current day and
+    only 100 tweets can be accessed per search. This function collects 100 tweets
+    per hour and returns a dictionary with the raw text and timestamp.
+    """
+
+    raw_tweets = []
+    tweet_time = []
+    
+    # Query
+    keyword = keyword + " lang:en"
+
+    for date_idx in range(mins_num,0,-1):
+
+        date_start = datetime.datetime.now() - datetime.timedelta(minutes = date_idx*min_interval)
+        date_until = date_start + datetime.timedelta(minutes=min_interval)
+
+        tweets = api.search_recent_tweets(query=keyword,
+                                    max_results=ROLLING,
+                                    end_time=date_until,
+                                    start_time=date_start,
+                                    tweet_fields=["text","created_at"])
+
+   # if not tweets.data:
+    #    return {"time": date_start, "text": [""]}
+    #else:
+        if tweets.data:
+            for twt in tweets.data:
+                raw_tweets.append(twt.text)
+                tweet_time.append(twt.created_at)
+    
+    if not raw_tweets:
+        return {"time": [date_start], "text": [""]} 
+
+    return {"time": tweet_time, "text": raw_tweets}
+
 def clean_tweet(tweet):
     """
     clean_tweet processes the tweet into a list of words for NLP sentiment analysis. 
