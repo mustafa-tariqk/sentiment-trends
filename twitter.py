@@ -12,11 +12,17 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.corpus import stopwords
 from string import punctuation
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
-from matplotlib.collections import LineCollection
+from transformers import AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoConfig
+from scipy.special import softmax
 from secret import * # Contains the OAuth authentication tokens.
 
-ROLLING = 10
+MODEL = f"cardiffnlp/twitter-roberta-base-sentiment-latest"
+tokenizer = AutoTokenizer.from_pretrained(MODEL)
+config = AutoConfig.from_pretrained(MODEL)
+model = AutoModelForSequenceClassification.from_pretrained(MODEL)
+
+ROLLING = 50
 
 api = tweepy.Client(BEARER_TOKEN, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
@@ -47,7 +53,7 @@ def get_line_chart(data):
         alt.Chart(data)
         .mark_rule()
         .encode(
-            # x="yearmonthdate(time)",
+            x="Time",
             y="Sentiment",
             opacity=alt.condition(hover, alt.value(0.3), alt.value(0)),
             tooltip=[
@@ -183,9 +189,10 @@ def clean_tweet(tweet):
 
     # Removing RT from tweet (can't figure out how to filter out retweets with Twitter APIv2)
     remove_RT = lambda x: re.compile('rt @').sub('@',x,count=1).strip() 
-    remove_amp = lambda x: re.compile('amp @').sub('@',x,count=1).strip() 
     tweet = remove_RT(tweet)
-    tweet = remove_amp(tweet)
+
+    # Remove ampersand &amp;
+    tweet = re.sub(r"&amp;+", "", tweet)
 
     # Removing mentions with regex
     tweet = re.sub(r'@[A-Za-z0-9_]+', '', tweet)
@@ -211,29 +218,41 @@ def clean_tweet(tweet):
     stop_words = stopwords.words("english")
     new_tweet = [w for w in token if w not in stop_words]
 
-
     return ' '.join(new_tweet), ' '.join(hashtags)
 
-def analyze_tweets(input_tweets):
+def analyze_tweets(input_tweets,analyzer="bert"):
     """
     analyze_tweets returns statistics on processed set of tweets.
     Returns frequency data as well as sentiment analysis.
+    Choose between 'bert' and 'nltk' sentiment analyzer.
     """
 
     # Empty list to contain sentiment values
     all_sentiment = []
 
-    for idx in range(len(input_tweets)):  
+    if analyzer == 'nltk':
+        for idx in range(len(input_tweets)):  
 
-        # nltk sentiment analyzer using polarity scores
-        sentiment_analyzer = SentimentIntensityAnalyzer() 
-        temp = sentiment_analyzer.polarity_scores(input_tweets[idx])
+            # nltk sentiment analyzer using polarity scores
+            sentiment_analyzer = SentimentIntensityAnalyzer() 
+            temp = sentiment_analyzer.polarity_scores(input_tweets[idx])
 
-        # Taking compound portion as sentiment
-        # Values greater than 0.4 are positive
-        # Values less than -0.4 are negative
-        # Values between are neutral
-        all_sentiment.append(temp["compound"])
+            # Taking compound portion as sentiment
+            # Values greater than 0.4 are positive
+            # Values less than -0.4 are negative
+            # Values between are neutral
+            all_sentiment.append(temp["compound"])
+
+    if analyzer == 'bert':
+        for idx in range(len(input_tweets)): 
+            encoded_input = tokenizer(input_tweets[idx], return_tensors='pt')
+            output = model(**encoded_input)
+            scores = output[0][0].detach().numpy()
+            scores = softmax(scores)
+            score = (-1*scores[0]/3+scores[1]/3+scores[2]/3)
+
+            all_sentiment.append(score)
+
 
     word_labels, word_counts = sort_freq(input_tweets)
 
@@ -257,7 +276,7 @@ def get_timeseries(keyword):
         processed_tweets.append(temptweet)
         hashtags.append(temphash)
 
-    sentiments, word_labels, word_counts = analyze_tweets(processed_tweets)
+    sentiments, word_labels, word_counts = analyze_tweets(processed_tweets,analyzer='nltk')
 
     # Removes empty entries
     hashtags = list(filter(None, hashtags))
