@@ -16,6 +16,12 @@ from transformers import AutoModelForSequenceClassification
 from transformers import AutoTokenizer, AutoConfig
 from scipy.special import softmax
 from secret import * # Contains the OAuth authentication tokens.
+import os
+from proxy_utils import *
+
+
+os.environ['http_proxy'] = 'http://' + get_proxy()
+os.environ['https_proxy'] = 'http://' + get_proxy()
 
 MODEL = f"cardiffnlp/twitter-roberta-base-sentiment-latest"
 tokenizer = AutoTokenizer.from_pretrained(MODEL)

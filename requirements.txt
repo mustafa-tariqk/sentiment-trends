@@ -8,3 +8,7 @@ matplotlib
 transformers
 pandas
 scipy
+torch
+tensorflow
+flax
+wheel
