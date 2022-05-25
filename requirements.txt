@@ -5,3 +5,6 @@ streamlit
 flask
 flask_restful
 matplotlib
+transformers
+pandas
+scipy
